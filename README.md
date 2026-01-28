@@ -65,10 +65,10 @@ from simulation.dynamics import AsteroidMissionSimulator
 
 sim = AsteroidMissionSimulator(
     epoch_launch="2028-01-01",
-    dry_mass_kg=900,
-    fuel_mass_kg=600,
+    dry_mass_kg=500,
+    fuel_mass_kg=3500,
     isp_s=320,
-    asteroid_name="2099942"  # Apophis JPL Horizons ID
+    asteroid_name="2099942"  # Apophis
 )
 
 # Execute mission
@@ -83,9 +83,11 @@ print(sim.state())
 
 - **Target**: 99942 Apophis
 - **Launch**: 2028-01-01
-- **Dry Mass**: 900 kg
-- **Fuel**: 600 kg
-- **ISP**: 320 s
+- **Dry Mass**: 500 kg
+- **Fuel**: 3,500 kg
+- **Total Mass**: 4,000 kg
+- **ISP**: 320 s (chemical propulsion)
+- **Max Delta-V**: ~6.5 km/s
 - **Transfer time**: 300 days each way
 
 **Note**: The simulator uses Apophis's known orbital elements (a=0.9224 AU, e=0.1914, i=3.331°) directly, rather than querying JPL Horizons. This ensures reliable operation in CI/CD environments and avoids network dependencies.
@@ -102,6 +104,7 @@ GitHub Actions automatically regenerates visualizations:
 python generate_plots.py
 ```
 
+See [GITHUB_DEPLOYMENT.md](GITHUB_DEPLOYMENT.md) for complete setup instructions.
 
 ## License
 

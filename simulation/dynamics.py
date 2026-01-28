@@ -95,8 +95,8 @@ class AsteroidMissionSimulator:
     def __init__(
         self,
         epoch_launch="2028-01-01",
-        dry_mass_kg=900,
-        fuel_mass_kg=600,
+        dry_mass_kg=500,
+        fuel_mass_kg=3500,  # Increased for realistic delta-V budget
         isp_s=320,
         asteroid_name="2099942",  # Apophis JPL Horizons ID
     ):
@@ -228,7 +228,8 @@ class AsteroidMissionSimulator:
 def mission_delta_v_model(params):
     sim = AsteroidMissionSimulator(
         epoch_launch="2028-01-01",
-        fuel_mass_kg=600 * (1 + params["fuel_bias"]),
+        dry_mass_kg=500,
+        fuel_mass_kg=3500 * (1 + params["fuel_bias"]),
         isp_s=320 * (1 + params["isp_bias"]),
         asteroid_name="2099942",  # Apophis
     )
