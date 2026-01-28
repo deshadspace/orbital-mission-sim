@@ -26,13 +26,19 @@ jobs:
           pip install numpy matplotlib astropy poliastro
 
       - name: Run trajectory render
-        run: python render/trajectory.py
+        run: |
+          export PYTHONPATH="${PYTHONPATH}:${GITHUB_WORKSPACE}"
+          python render/trajectory.py
 
       - name: Run fuel plot render
-        run: python render/fuel_plot.py
+        run: |
+          export PYTHONPATH="${PYTHONPATH}:${GITHUB_WORKSPACE}"
+          python render/fuel_plot.py
 
       - name: Run velocity plot render
-        run: python render/velocity_plot.py
+        run: |
+          export PYTHONPATH="${PYTHONPATH}:${GITHUB_WORKSPACE}"
+          python render/velocity_plot.py
 
       - name: Commit updated assets
         run: |
