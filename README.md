@@ -4,7 +4,7 @@
 
 High-fidelity heliocentric mission simulator for Earth → Asteroid → Earth trajectories with fuel tracking and uncertainty propagation.
 
-![Update Mission Visuals](https://github.com/YOUR_USERNAME/YOUR_REPO_NAME/actions/workflows/update-mission.yml/badge.svg)
+![Update Mission Visuals](https://github.com/deshadspace/orbital-mission-sim/actions/workflows/update-mission.yml/badge.svg)
 
 ## 🚀 Live Mission Visualizations
 
@@ -102,8 +102,6 @@ python render/trajectory.py
 python render/fuel_plot.py
 python render/velocity_plot.py
 ```
-
-See [GITHUB_DEPLOYMENT.md](GITHUB_DEPLOYMENT.md) for complete setup instructions.
 
 ## License
 
