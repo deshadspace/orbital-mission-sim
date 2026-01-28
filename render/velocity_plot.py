@@ -2,6 +2,7 @@
 
 import matplotlib.pyplot as plt
 from astropy import units as u
+import numpy as np
 
 from simulation.dynamics import AsteroidMissionSimulator
 
@@ -11,10 +12,10 @@ def render_velocity():
     velocities = []
 
     sim.go_to_asteroid(300)
-    velocities.append(sim.orbit.v.norm().to(u.km / u.s).value)
+    velocities.append(np.linalg.norm(sim.orbit.v).to(u.km / u.s).value)
 
     sim.return_to_earth(300)
-    velocities.append(sim.orbit.v.norm().to(u.km / u.s).value)
+    velocities.append(np.linalg.norm(sim.orbit.v).to(u.km / u.s).value)
 
     plt.figure()
     plt.plot(["Outbound", "Inbound"], velocities, marker="o")
