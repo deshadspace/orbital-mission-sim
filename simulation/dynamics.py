@@ -98,7 +98,7 @@ class AsteroidMissionSimulator:
         dry_mass_kg=900,
         fuel_mass_kg=600,
         isp_s=320,
-        asteroid_name="99942 Apophis",
+        asteroid_name="2099942",  # Apophis JPL Horizons ID
     ):
         self.epoch = Time(epoch_launch, scale="tdb")
 
@@ -115,6 +115,8 @@ class AsteroidMissionSimulator:
         self.orbit = Orbit.from_ephem(Sun, earth_ephem, self.epoch)
 
         # Asteroid ephemeris
+        # Using JPL Horizons ID: 2099942 = 99942 Apophis
+        # Format: 2XXXXXX for numbered asteroids
         self.asteroid_ephem = Ephem.from_horizons(
             asteroid_name,
             epochs=self.epoch,
@@ -210,6 +212,7 @@ def mission_delta_v_model(params):
         epoch_launch="2028-01-01",
         fuel_mass_kg=600 * (1 + params["fuel_bias"]),
         isp_s=320 * (1 + params["isp_bias"]),
+        asteroid_name="2099942",  # Apophis
     )
 
     sim.go_to_asteroid(300)
