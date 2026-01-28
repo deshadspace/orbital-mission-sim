@@ -1,0 +1,43 @@
+name: Update Asteroid Mission Visuals
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: "0 2 * * *"   # runs daily at 02:00 UTC
+  workflow_dispatch:
+
+jobs:
+  simulate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"  # Required for poliastro 0.17.0
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy matplotlib astropy poliastro
+
+      - name: Run trajectory render
+        run: python render/trajectory.py
+
+      - name: Run fuel plot render
+        run: python render/fuel_plot.py
+
+      - name: Run velocity plot render
+        run: python render/velocity_plot.py
+
+      - name: Commit updated assets
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add assets/*.svg
+          git commit -m "auto: update mission visuals" || echo "No changes"
+          git push
