@@ -114,14 +114,30 @@ class AsteroidMissionSimulator:
         earth_ephem = Ephem.from_body(Earth, self.epoch)
         self.orbit = Orbit.from_ephem(Sun, earth_ephem, self.epoch)
 
-        # Asteroid ephemeris
-        # Using JPL Horizons ID: 2099942 = 99942 Apophis
-        # Format: 2XXXXXX for numbered asteroids
-        self.asteroid_ephem = Ephem.from_horizons(
-            asteroid_name,
-            epochs=self.epoch,
-            attractor=Sun,
+        # Asteroid orbit using known orbital elements
+        # Apophis (99942) orbital elements (J2000 epoch):
+        # Source: JPL Small-Body Database
+        # a = 0.9224 AU, e = 0.1914, i = 3.331°
+        print(f"[Info] Creating asteroid orbit from orbital elements")
+        
+        a_asteroid = 0.9224 * u.au      # Semi-major axis
+        ecc_asteroid = 0.1914 * u.one   # Eccentricity  
+        inc_asteroid = 3.331 * u.deg    # Inclination
+        raan_asteroid = 204.43 * u.deg  # Right ascension of ascending node
+        argp_asteroid = 126.39 * u.deg  # Argument of periapsis
+        nu_asteroid = 0 * u.deg         # True anomaly at epoch
+        
+        from poliastro.twobody import Orbit as OrbitClass
+        self.asteroid_orbit = OrbitClass.from_classical(
+            Sun,
+            a_asteroid, ecc_asteroid, inc_asteroid, 
+            raan_asteroid, argp_asteroid, nu_asteroid,
+            epoch=self.epoch
         )
+        
+        # Create ephemeris for the asteroid
+        # We'll use this orbit directly instead of querying Horizons
+        self.using_orbital_elements = True
 
         self.dv_used = 0 * u.m / u.s
 
@@ -170,21 +186,23 @@ class AsteroidMissionSimulator:
     # ------------------------
 
     def go_to_asteroid(self, tof_days=300):
-        asteroid_orbit = Orbit.from_ephem(
-            Sun,
-            self.asteroid_ephem,
-            epoch=self.epoch + tof_days * u.day,
-        )
-        dv = self.lambert_transfer(asteroid_orbit, tof_days)
+        # Propagate the asteroid orbit to the arrival time
+        asteroid_orbit_at_arrival = self.asteroid_orbit.propagate(tof_days * u.day)
+        
+        dv = self.lambert_transfer(asteroid_orbit_at_arrival, tof_days)
         print(f"[Burn] Earth → Asteroid Δv = {dv:.1f}")
         return dv
 
     def return_to_earth(self, tof_days=300):
-        earth_ephem = Ephem.from_body(Earth, self.epoch + tof_days * u.day)
+        # Calculate total mission time to get proper Earth position
+        total_time = self.orbit.epoch - self.epoch
+        earth_time = self.epoch + total_time + tof_days * u.day
+        
+        earth_ephem = Ephem.from_body(Earth, earth_time)
         earth_orbit = Orbit.from_ephem(
             Sun,
             earth_ephem,
-            self.epoch + tof_days * u.day,
+            earth_time,
         )
         dv = self.lambert_transfer(earth_orbit, tof_days)
         print(f"[Burn] Asteroid → Earth Δv = {dv:.1f}")

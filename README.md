@@ -1,10 +1,8 @@
-# orbital-mission-sim
-
 # Asteroid Mission Simulator
 
 High-fidelity heliocentric mission simulator for Earth → Asteroid → Earth trajectories with fuel tracking and uncertainty propagation.
 
-![Update Mission Visuals](https://github.com/deshadspace/orbital-mission-sim/actions/workflows/update-mission.yml/badge.svg)
+![Update Mission Visuals](https://github.com/YOUR_USERNAME/YOUR_REPO_NAME/actions/workflows/update-mission.yml/badge.svg)
 
 ## 🚀 Live Mission Visualizations
 
@@ -27,6 +25,7 @@ These plots are automatically generated daily and show the current mission profi
 - **Rocket equation** fuel consumption tracking
 - **Monte Carlo uncertainty propagation** with Polynomial Chaos Expansion
 - **Automated visualization** generation via GitHub Actions (updates daily at 02:00 UTC)
+- **Orbital elements-based simulation** - uses Apophis orbital parameters instead of JPL Horizons queries for reliability
 
 ## Structure
 
@@ -69,7 +68,7 @@ sim = AsteroidMissionSimulator(
     dry_mass_kg=900,
     fuel_mass_kg=600,
     isp_s=320,
-    asteroid_name="99942 Apophis"
+    asteroid_name="2099942"  # Apophis JPL Horizons ID
 )
 
 # Execute mission
@@ -89,6 +88,8 @@ print(sim.state())
 - **ISP**: 320 s
 - **Transfer time**: 300 days each way
 
+**Note**: The simulator uses Apophis's known orbital elements (a=0.9224 AU, e=0.1914, i=3.331°) directly, rather than querying JPL Horizons. This ensures reliable operation in CI/CD environments and avoids network dependencies.
+
 ## Automation
 
 GitHub Actions automatically regenerates visualizations:
@@ -98,10 +99,9 @@ GitHub Actions automatically regenerates visualizations:
 
 **Important**: Before pushing to GitHub for the first time, generate the initial plots locally:
 ```bash
-python render/trajectory.py
-python render/fuel_plot.py
-python render/velocity_plot.py
+python generate_plots.py
 ```
+
 
 ## License
 
