@@ -44,7 +44,7 @@ jobs:
       - name: Generate mission timeline JSON
         run: |
           export PYTHONPATH="${PYTHONPATH}:${GITHUB_WORKSPACE}"
-          python generate_mission_data.py
+          python scripts/generate_mission_data.py
 
       - name: Commit updated assets
         run: |
