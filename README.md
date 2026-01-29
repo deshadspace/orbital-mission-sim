@@ -104,7 +104,6 @@ GitHub Actions automatically regenerates visualizations:
 python generate_plots.py
 ```
 
-See [GITHUB_DEPLOYMENT.md](GITHUB_DEPLOYMENT.md) for complete setup instructions.
 
 ## License
 

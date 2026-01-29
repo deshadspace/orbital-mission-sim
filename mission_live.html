@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earth-Moon Mission Live Simulation</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Space Mono', monospace;
+            background: #000000;
+            color: #00ff00;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            height: 100vh;
+            gap: 0;
+        }
+        
+        .canvas-container {
+            position: relative;
+            background: radial-gradient(ellipse at center, #0a0a1a 0%, #000000 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        canvas {
+            max-width: 100%;
+            max-height: 100%;
+            filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.3));
+        }
+        
+        .telemetry-panel {
+            background: linear-gradient(180deg, #001a1a 0%, #000a0a 100%);
+            border-left: 2px solid #00ff88;
+            padding: 20px;
+            overflow-y: auto;
+            font-size: 13px;
+        }
+        
+        .telemetry-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .telemetry-panel::-webkit-scrollbar-track {
+            background: #001a1a;
+        }
+        
+        .telemetry-panel::-webkit-scrollbar-thumb {
+            background: #00ff88;
+            border-radius: 4px;
+        }
+        
+        .mission-title {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 18px;
+            color: #00ffff;
+            text-align: center;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+        }
+        
+        .status-block {
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px solid #00ff88;
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .status-header {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            color: #00ffff;
+            font-size: 14px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 4px 0;
+            padding: 2px 0;
+        }
+        
+        .status-label {
+            color: #00ff88;
+        }
+        
+        .status-value {
+            color: #ffffff;
+            font-weight: bold;
+            font-family: 'Space Mono', monospace;
+        }
+        
+        .phase-indicator {
+            background: linear-gradient(90deg, #ff0066 0%, #ff6600 100%);
+            color: #ffffff;
+            padding: 10px;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            animation: pulse 2s ease-in-out infinite;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #001a1a;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88 0%, #00ffff 100%);
+            transition: width 0.3s ease;
+        }
+        
+        .legend {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid #00ffff;
+            border-radius: 4px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .earth-color { background: #1e90ff; box-shadow: 0 0 10px rgba(30, 144, 255, 0.8); }
+        .moon-color { background: #aaaaaa; box-shadow: 0 0 10px rgba(170, 170, 170, 0.5); }
+        .spacecraft-color { background: #ff0000; box-shadow: 0 0 10px rgba(255, 0, 0, 0.8); }
+        .trail-color { 
+            background: transparent; 
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            border-radius: 0;
+        }
+        
+        .time-display {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 16px;
+            color: #00ffff;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 4px;
+            border: 1px solid #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+        }
+        
+        .loop-indicator {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            font-size: 11px;
+            color: #00ff88;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 15px;
+            border-radius: 4px;
+            border: 1px solid #00ff88;
+        }
+        
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr auto;
+            }
+            
+            .telemetry-panel {
+                max-height: 40vh;
+                border-left: none;
+                border-top: 2px solid #00ff88;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="canvas-container">
+            <canvas id="missionCanvas"></canvas>
+            <div class="time-display" id="timeDisplay">T+ 00:00:00</div>
+            <div class="loop-indicator">🔄 2-Hour Loop | Auto-Restart</div>
+        </div>
+        
+        <div class="telemetry-panel">
+            <div class="mission-title">🌍 Earth-Moon-Earth Mission</div>
+            
+            <div class="phase-indicator" id="phaseIndicator">INITIALIZING</div>
+            
+            <div class="status-block">
+                <div class="status-header">Mission Time</div>
+                <div class="status-row">
+                    <span class="status-label">Elapsed:</span>
+                    <span class="status-value" id="missionTime">0d 00h 00m</span>
+                </div>
+                <div class="status-row">
+                    <span class="status-label">Progress:</span>
+                    <span class="status-value" id="missionProgress">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <div class="status-block">
+                <div class="status-header">Spacecraft State</div>
+                <div class="status-row">
+                    <span class="status-label">Altitude:</span>
+                    <span class="status-value" id="altitude">--- km</span>
+                </div>
+                <div class="status-row">
+                    <span class="status-label">Velocity:</span>
+                    <span class="status-value" id="velocity">--- m/s</span>
+                </div>
+                <div class="status-row">
+                    <span class="status-label">Fuel:</span>
+                    <span class="status-value" id="fuel">--- kg</span>
+                </div>
+            </div>
+            
+            <div class="status-block">
+                <div class="status-header">Position (Earth-Centered)</div>
+                <div class="status-row">
+                    <span class="status-label">X:</span>
+                    <span class="status-value" id="posX">--- km</span>
+                </div>
+                <div class="status-row">
+                    <span class="status-label">Y:</span>
+                    <span class="status-value" id="posY">--- km</span>
+                </div>
+            </div>
+            
+            <div class="legend">
+                <div class="status-header">Legend</div>
+                <div class="legend-item">
+                    <div class="legend-color earth-color"></div>
+                    <span>Earth</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color moon-color"></div>
+                    <span>Moon (orbiting)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color spacecraft-color"></div>
+                    <span>Spacecraft</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color trail-color"></div>
+                    <span>Trajectory Trail</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mission visualization
+        const canvas = document.getElementById('missionCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Constants
+        const R_EARTH = 6.371e6; // m
+        const R_MOON = 1.737e6; // m
+        const EARTH_MOON_DISTANCE = 384400e3; // m
+        const LOOP_DURATION = 20; // 2 hours in seconds
+        
+        // Mission data
+        let missionData = null;
+        let missionDuration = 0;
+        let trail = [];
+        const MAX_TRAIL_LENGTH = 500;
+        
+        // Animation timing
+        let loopStartTime = Date.now();
+        let animationFrame = null;
+        
+        // Canvas setup
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const size = Math.min(container.clientWidth, container.clientHeight) - 40;
+            canvas.width = size;
+            canvas.height = size;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        // Load mission data
+        async function loadMissionData() {
+            try {
+                const response = await fetch('assets/mission_timeline.json');
+                const data = await response.json();
+                missionData = data;
+                missionDuration = data.mission_duration;
+                console.log(`✅ Loaded ${data.states.length} mission states`);
+                console.log(`📊 Mission duration: ${(missionDuration/3600).toFixed(1)} hours`);
+                console.log(`⏱️  Loop duration: ${LOOP_DURATION/3600} hours`);
+                startAnimation();
+            } catch (error) {
+                console.error('❌ Failed to load mission data:', error);
+                useDemoData();
+            }
+        }
+        
+        function useDemoData() {
+            console.log('📝 Using demo data...');
+            missionData = { mission_duration: 600000, initial_fuel: 5000, final_fuel: 150, states: [] };
+            const steps = 1000;
+            for (let i = 0; i < steps; i++) {
+                const t = i / steps;
+                const angle = t * Math.PI * 4;
+                const r = R_EARTH * 1.1 + Math.sin(t * Math.PI * 2) * R_EARTH * 0.5;
+                missionData.states.push({
+                    time: t * 600000,
+                    phase: i < steps/3 ? 'leo_parking' : i < 2*steps/3 ? 'trans_lunar_coast' : 'trans_earth_coast',
+                    x: r * Math.cos(angle),
+                    y: r * Math.sin(angle),
+                    vx: 7500,
+                    vy: 0,
+                    fuel: 5000 - t * 4000,
+                    altitude: r - R_EARTH,
+                    velocity: 7500 + t * 3000
+                });
+            }
+            missionDuration = 600000;
+            startAnimation();
+        }
+        
+        function getMissionState(loopTime) {
+            if (!missionData || !missionData.states.length) return null;
+            
+            // Map loop time (0 to LOOP_DURATION) to mission time (0 to missionDuration)
+            const missionTime = (loopTime / LOOP_DURATION) * missionDuration;
+            
+            // Find closest state by binary search for efficiency
+            let left = 0;
+            let right = missionData.states.length - 1;
+            
+            while (left < right) {
+                const mid = Math.floor((left + right) / 2);
+                if (missionData.states[mid].time < missionTime) {
+                    left = mid + 1;
+                } else {
+                    right = mid;
+                }
+            }
+            
+            return missionData.states[left];
+        }
+        
+        function drawEarth(x, y, scale) {
+            const radius = (R_EARTH / EARTH_MOON_DISTANCE) * scale;
+            
+            // Earth glow
+            const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 1.5);
+            gradient.addColorStop(0, 'rgba(30, 144, 255, 0.3)');
+            gradient.addColorStop(1, 'rgba(30, 144, 255, 0)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(x, y, radius * 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Earth body
+            ctx.fillStyle = '#1e90ff';
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Earth highlight
+            const highlight = ctx.createRadialGradient(x - radius * 0.3, y - radius * 0.3, 0, x, y, radius);
+            highlight.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+            highlight.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = highlight;
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Earth label
+            ctx.fillStyle = '#00ffff';
+            ctx.font = 'bold 12px Orbitron';
+            ctx.textAlign = 'center';
+            ctx.fillText('EARTH', x, y + radius + 20);
+        }
+        
+        function drawMoon(x, y, scale) {
+            const radius = Math.max((R_MOON / EARTH_MOON_DISTANCE) * scale * 3, 8); // Min 8px for visibility
+            
+            // Moon glow
+            const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 1.5);
+            gradient.addColorStop(0, 'rgba(170, 170, 170, 0.3)');
+            gradient.addColorStop(1, 'rgba(170, 170, 170, 0)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(x, y, radius * 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Moon body
+            ctx.fillStyle = '#aaaaaa';
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Moon craters
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.beginPath();
+            ctx.arc(x + radius * 0.3, y - radius * 0.2, radius * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x - radius * 0.4, y + radius * 0.3, radius * 0.2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Moon label
+            ctx.fillStyle = '#aaaaaa';
+            ctx.font = 'bold 10px Orbitron';
+            ctx.textAlign = 'center';
+            ctx.fillText('MOON', x, y + radius + 16);
+        }
+        
+        function drawSpacecraft(x, y) {
+            const size = 6;
+            
+            // Spacecraft glow
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+            ctx.beginPath();
+            ctx.arc(x, y, size * 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Spacecraft body
+            ctx.fillStyle = '#ff0000';
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Spacecraft highlight
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(x - size * 0.3, y - size * 0.3, size * 0.4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        function drawTrail() {
+            if (trail.length < 2) return;
+            
+            // Gradient trail that fades
+            for (let i = 1; i < trail.length; i++) {
+                const alpha = i / trail.length;
+                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.6})`;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(trail[i-1].x, trail[i-1].y);
+                ctx.lineTo(trail[i].x, trail[i].y);
+                ctx.stroke();
+            }
+        }
+        
+        function drawMoonOrbit(centerX, centerY, scale) {
+            const orbitRadius = (EARTH_MOON_DISTANCE / EARTH_MOON_DISTANCE) * scale;
+            
+            ctx.strokeStyle = 'rgba(170, 170, 170, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, orbitRadius, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+        
+        function render() {
+            const now = Date.now();
+            const elapsedMs = now - loopStartTime;
+            const elapsedSeconds = elapsedMs / 1000;
+            
+            // CRITICAL FIX: Loop properly - reset when we exceed loop duration
+            if (elapsedSeconds >= LOOP_DURATION) {
+                loopStartTime = now; // Reset loop
+                trail = []; // Clear trail
+                console.log('🔄 Mission loop restarted');
+            }
+            
+            const loopTime = elapsedSeconds % LOOP_DURATION;
+            const state = getMissionState(loopTime);
+            
+            if (!state) {
+                animationFrame = requestAnimationFrame(render);
+                return;
+            }
+            
+            // Clear canvas
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw stars
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            for (let i = 0; i < 100; i++) {
+                const x = (i * 7919) % canvas.width;
+                const y = (i * 6113) % canvas.height;
+                const size = ((i * 13) % 3) / 2;
+                ctx.fillRect(x, y, size, size);
+            }
+            
+            // Calculate display parameters
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            // Dynamic scaling based on spacecraft position
+            // Find max distance from Earth in this state to auto-scale
+            const distFromEarth = Math.sqrt(state.x**2 + state.y**2);
+            const maxDist = Math.max(distFromEarth, EARTH_MOON_DISTANCE * 1.2);
+            const scale = (canvas.width * 0.42) / maxDist;
+            
+            // Moon position (orbits Earth with 27.3 day period)
+            const missionTime = (loopTime / LOOP_DURATION) * missionDuration;
+            const moonAngle = (missionTime / (27.3 * 86400)) * 2 * Math.PI;
+            const moonX = centerX + Math.cos(moonAngle) * EARTH_MOON_DISTANCE * scale;
+            const moonY = centerY + Math.sin(moonAngle) * EARTH_MOON_DISTANCE * scale;
+            
+            // Spacecraft position
+            const spacecraftX = centerX + state.x * scale;
+            const spacecraftY = centerY + state.y * scale;
+            
+            // Add to trail (sample every few frames to avoid too dense trail)
+            if (trail.length === 0 || 
+                Math.abs(spacecraftX - trail[trail.length-1].x) > 2 ||
+                Math.abs(spacecraftY - trail[trail.length-1].y) > 2) {
+                trail.push({ x: spacecraftX, y: spacecraftY });
+                if (trail.length > MAX_TRAIL_LENGTH) {
+                    trail.shift();
+                }
+            }
+            
+            // Draw moon orbit
+            drawMoonOrbit(centerX, centerY, scale * EARTH_MOON_DISTANCE);
+            
+            // Draw trail
+            drawTrail();
+            
+            // Draw Earth (always at center)
+            drawEarth(centerX, centerY, scale * EARTH_MOON_DISTANCE);
+            
+            // Draw Moon
+            drawMoon(moonX, moonY, scale * EARTH_MOON_DISTANCE);
+            
+            // Draw Spacecraft
+            drawSpacecraft(spacecraftX, spacecraftY);
+            
+            // Update telemetry
+            updateTelemetry(state, loopTime);
+            
+            animationFrame = requestAnimationFrame(render);
+        }
+        
+        function updateTelemetry(state, loopTime) {
+            // FIXED: Use loop time, not mission time for display
+            const hours = Math.floor(loopTime / 3600);
+            const minutes = Math.floor((loopTime % 3600) / 60);
+            const seconds = Math.floor(loopTime % 60);
+            document.getElementById('timeDisplay').textContent = 
+                `T+ ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            
+            // Mission time in actual mission timeline
+            const missionTime = (loopTime / LOOP_DURATION) * missionDuration;
+            const days = Math.floor(missionTime / 86400);
+            const remHours = Math.floor((missionTime % 86400) / 3600);
+            const remMinutes = Math.floor((missionTime % 3600) / 60);
+            document.getElementById('missionTime').textContent = 
+                `${days}d ${String(remHours).padStart(2, '0')}h ${String(remMinutes).padStart(2, '0')}m`;
+            
+            // FIXED: Progress based on loop time, capped at 100%
+            const progress = Math.min((loopTime / LOOP_DURATION * 100), 100);
+            document.getElementById('missionProgress').textContent = `${progress.toFixed(1)}%`;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            
+            // Phase
+            const phaseNames = {
+                'launch': '🚀 Launch',
+                'leo_insertion': '🚀 LEO Insertion',
+                'leo_parking': '🔄 LEO Parking Orbit',
+                'tli_burn': '🔥 Trans-Lunar Injection',
+                'trans_lunar_coast': '🌙 Coast to Moon',
+                'loi_burn': '🔥 Lunar Orbit Insertion',
+                'llo_parking': '🔄 Lunar Orbit',
+                'tei_burn': '🔥 Trans-Earth Injection',
+                'trans_earth_coast': '🌍 Return to Earth',
+                'eoi_burn': '🔥 Earth Orbit Insertion',
+                'leo_final': '🔄 Final LEO Orbit',
+                'deorbit': '🔥 De-orbit Burn',
+                'reentry': '🔥 Atmospheric Re-entry',
+                'landed': '✅ Mission Complete'
+            };
+            document.getElementById('phaseIndicator').textContent = 
+                phaseNames[state.phase] || state.phase.toUpperCase();
+            
+            // State data
+            document.getElementById('altitude').textContent = `${(state.altitude / 1000).toFixed(1)} km`;
+            document.getElementById('velocity').textContent = `${state.velocity.toFixed(0)} m/s`;
+            document.getElementById('fuel').textContent = `${state.fuel.toFixed(1)} kg`;
+            document.getElementById('posX').textContent = `${(state.x / 1000).toFixed(0)} km`;
+            document.getElementById('posY').textContent = `${(state.y / 1000).toFixed(0)} km`;
+        }
+        
+        function startAnimation() {
+            loopStartTime = Date.now();
+            trail = [];
+            console.log('🚀 Starting mission animation');
+            console.log(`📊 Mission will loop every ${LOOP_DURATION/3600} hours`);
+            render();
+        }
+        
+        // Initialize
+        loadMissionData();
+    </script>
+</body>
+</html>
